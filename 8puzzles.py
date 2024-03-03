@@ -64,7 +64,33 @@ class BoardState:
             for j in range(3):
                 print(self.current_board[i][j], end="\t")
             print()
-    
+
+
+    # def __eq__(self,state:"BoardState"):      
+    #     for i in range(3):
+    #         for j in range(3):
+    #             if self.current_board[i][j] != state.current_board[i][j]:
+    #                 return False
+    #     return True        
+
+
+    def isEqual(self, state):
+        for i in range(3):
+            for j in range(3):
+                if self.current_board[i][j] != state.current_board[i][j]:
+                    return False
+        return True      
+
+    def isIn(self,explored):
+        for state in explored:
+            if self.isEqual(state):
+                return True
+        return False    
+
+                
+
+
+
 
 def finished(state:BoardState):        
     for i in range(3):
@@ -100,14 +126,15 @@ def DFS(init_board):
             return True
         
         actions = state.getAllAction()
-        print()
-        print(actions)
-        print()
+       
         for action in actions:
             new_state = state.takeAction(action)
-            if (new_state not in frontier) and (new_state not in explored):
+            if (( not new_state.isIn(explored)) and ( not new_state.isIn(frontier))):
                 frontier.append(new_state)
+                print()
+                print(action)
                 
+
     return False
 
 
