@@ -88,7 +88,6 @@ def DFS(init_board):
     frontier.append(init_state)
     count = 0
     while not isEmpty(frontier):
-        print()
         print(count)
         count += 1
         print()
