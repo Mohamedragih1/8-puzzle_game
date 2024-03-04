@@ -1,7 +1,8 @@
 import math 
 from collections import deque
 import queue
-import random
+import heapq
+
 
 path = []
 
@@ -11,8 +12,10 @@ class BoardState:
         self.zero_index = self.getZeroIndex()
         self.prev_state = prev_state
         self.prev_action = prev_action
-        self.manhattan_cost = self.manhattan()
-        self.euclidean_cost = self.euclidean()
+        self.cost = 0
+
+    def __lt__(self, other):
+        return self.cost < other.cost
 
     def getZeroIndex(self):
         for i in range(3):
@@ -72,7 +75,6 @@ class BoardState:
             print()
 
 
-
     def manhattan(self):
         manhattan_dist = 0
         for i in range(3):
@@ -80,6 +82,7 @@ class BoardState:
                 if (i*3 + j) != self.current_board[i][j]:
                     index1, index2 = findIndex(self.current_board, i*3 + j)
                     manhattan_dist += abs((i - index1))+ abs((j - index2))
+        self.cost += manhattan_dist
         return manhattan_dist            
 
 
@@ -90,8 +93,10 @@ class BoardState:
                 if (i*3 + j) != self.current_board[i][j]:
                     index1, index2 = findIndex(self.current_board, i*3 + j)
                     euclidean_dist += math.sqrt(math.pow((i - index1), 2)+ math.pow((j - index2), 2))
+        
+        self.cost += euclidean_dist
+                    
         return euclidean_dist            
-
 
 
     def isEqual(self, state):
@@ -152,13 +157,13 @@ def DFS(init_board):
     frontier.append(init_state)
     count = 0
     while not isEmpty(frontier):
-        print(count)
+        # print(count)
         count += 1
-        print()
+        # print()
         state = frontier.pop()
         explored.add(state)
-        print()
-        state.printState()
+        # print()
+        # state.printState()
         
         if finished(state):
             path.append(state)
@@ -171,11 +176,11 @@ def DFS(init_board):
        
         for action in actions:
             new_state = state.takeAction(action)
-            if (( not new_state.isIn(explored)) and ( not new_state.isIn(frontier))):
+            if (( not new_state.isIn(explored)) and (not new_state.isIn(frontier))):
                 frontier.append(new_state)
-                print()
-                print(action)
-                print()
+                # print()
+                # print(action)
+                # print()
 
     return False
 
@@ -217,15 +222,16 @@ def BFS(init_board):
 
 def AStar(init_board):
     init_state = BoardState(init_board, None, None)
-    frontier = queue.Queue()
+    frontier = []
+    heapq.heapify(frontier)
     explored = set()
-    frontier.put(init_state)
+    heapq.heappush(frontier, init_state)
     count = 0
-    while not frontier.empty():
+    while len(frontier) != 0:
         print(count)
         count += 1
         print()
-        state = frontier.get()
+        state = heapq.heappop(frontier)
         explored.add(state)
         print()
         state.printState()
@@ -240,8 +246,10 @@ def AStar(init_board):
        
         for action in actions:
             new_state = state.takeAction(action)
-            if ( not inQueue(new_state, frontier)) and ( not new_state.isIn(explored)):
-                frontier.put(new_state)
+            # new_state.manhattan()
+            new_state.euclidean()
+            if (( not new_state.isIn(explored)) and (not new_state.isIn(frontier))):
+                heapq.heappush(frontier, new_state)
                 print()
                 print(action)
                 print()
@@ -252,25 +260,31 @@ def AStar(init_board):
 
 def main():
     
+    # init_board = [
+    #     [1, 0, 2],
+    #     [3, 4, 5],
+    #     [6, 7, 8]
+    # ]
+    
     init_board = [
-        [1, 0, 2],
-        [3, 4, 5],
+        [1, 2, 5],
+        [3, 4, 0],
         [6, 7, 8]
     ]
     
     init_state = BoardState(init_board, None, None)
     init_state.printState()
     print()
-    print("manhattan ",init_state.manhattan_cost)
-    print("euclidean",init_state.euclidean_cost)
-    # print(BFS(init_board))
+    # print("manhattan ",init_state.manhattan_cost)
+    # print("euclidean",init_state.euclidean_cost)
+    print(AStar(init_board))
 
-    # print("----------------------------------")
-    # path.reverse()
-    # for state in path:
-    #     print()
-    #     state.printState()
-    #     print
+    print("----------------------------------")
+    path.reverse()
+    for state in path:
+        print()
+        state.printState()
+        print
     
 if __name__ == "__main__":
     main()
