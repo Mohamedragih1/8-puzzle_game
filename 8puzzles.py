@@ -1,4 +1,5 @@
 from collections import deque
+import queue
 import random
 
 class BoardState:
@@ -132,11 +133,39 @@ def DFS(init_board):
             if (( not new_state.isIn(explored)) and ( not new_state.isIn(frontier))):
                 frontier.append(new_state)
                 print()
-                print(action)
-                
+                print(actions)
+                print()
 
     return False
 
+def BFS(init_board):
+    init_state = BoardState(init_board, None, None)
+    frontier = queue.Queue()
+    explored = set()
+    frontier.put(init_state)
+    count = 0
+    while not frontier.empty():
+        print(count)
+        count += 1
+        print()
+        state = frontier.get()
+        explored.add(state)
+        print()
+        state.printState()
+        
+        if finished(state):
+            return True
+        
+        actions = state.getAllAction()
+       
+        for action in actions:
+            new_state = state.takeAction(action)
+            if ( new_state not in frontier) and ( not new_state.isIn(explored)):
+                frontier.put(new_state)
+                print()
+                print(actions)
+                print()
+    
 
 def main():
     
