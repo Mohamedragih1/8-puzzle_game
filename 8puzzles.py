@@ -1,5 +1,9 @@
+import math 
 from collections import deque
+import queue
 import random
+
+path = []
 
 class BoardState:
     def __init__(self, current_board:list, prev_state:'BoardState', prev_action):
@@ -7,6 +11,8 @@ class BoardState:
         self.zero_index = self.getZeroIndex()
         self.prev_state = prev_state
         self.prev_action = prev_action
+        self.manhattan_cost = self.manhattan()
+        self.euclidean_cost = self.euclidean()
 
     def getZeroIndex(self):
         for i in range(3):
@@ -55,7 +61,7 @@ class BoardState:
             if self.checkAction(i) == True:
                 available_actions.append(i)
 
-        random.shuffle(available_actions)
+        # random.shuffle(available_actions)
 
         return available_actions
     
@@ -66,12 +72,26 @@ class BoardState:
             print()
 
 
-    # def __eq__(self,state:"BoardState"):      
-    #     for i in range(3):
-    #         for j in range(3):
-    #             if self.current_board[i][j] != state.current_board[i][j]:
-    #                 return False
-    #     return True        
+
+    def manhattan(self):
+        manhattan_dist = 0
+        for i in range(3):
+            for j in range(3):
+                if (i*3 + j) != self.current_board[i][j]:
+                    index1, index2 = findIndex(self.current_board, i*3 + j)
+                    manhattan_dist += abs((i - index1))+ abs((j - index2))
+        return manhattan_dist            
+
+
+    def euclidean(self):
+        euclidean_dist = 0
+        for i in range(3):
+            for j in range(3):
+                if (i*3 + j) != self.current_board[i][j]:
+                    index1, index2 = findIndex(self.current_board, i*3 + j)
+                    euclidean_dist += math.sqrt(math.pow((i - index1), 2)+ math.pow((j - index2), 2))
+        return euclidean_dist            
+
 
 
     def isEqual(self, state):
@@ -87,8 +107,26 @@ class BoardState:
                 return True
         return False    
 
-                
 
+def findIndex(board:'BoardState', target):
+
+    for i, row in enumerate(board):
+        for j, num in enumerate(row):
+            if num == target:
+                return ( i, j) 
+    return (None, None)        
+
+
+def inQueue(state:'BoardState',frontier:queue):
+    temp = queue.Queue()
+    while not frontier.empty():
+        temp.put(frontier.get())
+    while not temp.empty():
+        my_state = temp.get()
+        frontier.put(my_state)
+        if state.isEqual(my_state):
+            return True
+    return False    
 
 
 
@@ -123,6 +161,10 @@ def DFS(init_board):
         state.printState()
         
         if finished(state):
+            path.append(state)
+            while state.prev_state != None:
+                state = state.prev_state
+                path.append(state)            
             return True
         
         actions = state.getAllAction()
@@ -133,9 +175,79 @@ def DFS(init_board):
                 frontier.append(new_state)
                 print()
                 print(action)
-                
+                print()
 
     return False
+
+
+
+def BFS(init_board):
+    init_state = BoardState(init_board, None, None)
+    frontier = queue.Queue()
+    explored = set()
+    frontier.put(init_state)
+    count = 0
+    while not frontier.empty():
+        print(count)
+        count += 1
+        print()
+        state = frontier.get()
+        explored.add(state)
+        print()
+        state.printState()
+        if finished(state):
+            path.append(state)
+            while state.prev_state != None:
+                state = state.prev_state
+                path.append(state)
+            return True
+        
+        actions = state.getAllAction()
+       
+        for action in actions:
+            new_state = state.takeAction(action)
+            if ( not inQueue(new_state, frontier)) and ( not new_state.isIn(explored)):
+                frontier.put(new_state)
+                print()
+                print(action)
+                print()
+                
+    return False
+
+
+def AStar(init_board):
+    init_state = BoardState(init_board, None, None)
+    frontier = queue.Queue()
+    explored = set()
+    frontier.put(init_state)
+    count = 0
+    while not frontier.empty():
+        print(count)
+        count += 1
+        print()
+        state = frontier.get()
+        explored.add(state)
+        print()
+        state.printState()
+        if finished(state):
+            path.append(state)
+            while state.prev_state != None:
+                state = state.prev_state
+                path.append(state)
+            return True
+        
+        actions = state.getAllAction()
+       
+        for action in actions:
+            new_state = state.takeAction(action)
+            if ( not inQueue(new_state, frontier)) and ( not new_state.isIn(explored)):
+                frontier.put(new_state)
+                print()
+                print(action)
+                print()
+                
+    return False
+
 
 
 def main():
@@ -149,9 +261,16 @@ def main():
     init_state = BoardState(init_board, None, None)
     init_state.printState()
     print()
-    
-   
-    print(DFS(init_board))
+    print("manhattan ",init_state.manhattan_cost)
+    print("euclidean",init_state.euclidean_cost)
+    # print(BFS(init_board))
+
+    # print("----------------------------------")
+    # path.reverse()
+    # for state in path:
+    #     print()
+    #     state.printState()
+    #     print
     
 if __name__ == "__main__":
     main()
