@@ -2,9 +2,13 @@ import math
 from collections import deque
 import queue
 import heapq
+import tkinter as tk
+from tkinter import ttk
+import time
 
 
 path = []
+cost = 0
 
 class BoardState:
     def __init__(self, current_board:list, prev_state:'BoardState', prev_action):
@@ -113,6 +117,78 @@ class BoardState:
         return False    
 
 
+
+
+class MyGUI():
+    def __init__(self, root, board_state:'BoradState'):
+        self.root = root
+        self.board_state = board_state
+        self.setGui()
+
+    def setGui(self):
+        self.root.geometry("800x550")
+        self.root.title("8 Puzzle")
+        self.root.configure(bg="#CCFFFF")
+        self.label = tk.Label(self.root, text="8 Puzzle", font=('Goudy Stout', 30), foreground="#0571B0",
+                              background="#CCFFFF")
+        self.label.pack(padx=10)
+        self.canvas = tk.Canvas(self.root, width=300, height=300, bg="#404040")
+        self.canvas.pack(pady=20, padx=20)
+
+        self.search_label = tk.Label(self.root, text="Search Algorithm:", font=('Arial', 12), bg="#CCFFFF")
+        self.search_label.pack(pady=5)
+        self.search_var = tk.StringVar()
+        self.search_combobox = ttk.Combobox(self.root, textvariable=self.search_var,
+                                                      values=["DFS", "BFS", "A* manhattan", "A* euclidean"], state="readonly",font=('Arial', 11))
+        self.search_combobox.current(0)
+        self.search_combobox.pack(pady=5)
+
+        self.button = tk.Button(self.root, text="Search", bg="#009292", anchor="center", width=20, font=('Arial', 13))
+        self.button.pack(pady=20, padx=20)
+        self.display_matrix(self.board_state)
+        self.button.bind("<Button-1>", lambda event: self.runSearch())
+
+    def runSearch(self):
+        search_algorithm = self.search_var.get()
+
+        if search_algorithm == "DFS":
+            goal = DFS(self.board_state)
+            self.display_matrix(goal.current_board)
+            printStatistics()
+        elif search_algorithm == "BFS":
+            goal = BFS(self.board_state)
+            self.display_matrix(goal.current_board)
+            printStatistics()
+        elif search_algorithm == "A* manhattan":
+            goal = AStar(self.board_state, 0) 
+            self.display_matrix(goal.current_board) 
+            printStatistics()
+        else:
+            goal = AStar(self.board_state, 1) 
+            self.display_matrix(goal.current_board) 
+            printStatistics()
+
+
+
+
+    def display_matrix(self, matrix):
+        cell_width = 100
+        cell_height = 100
+        for i in range(3):
+            for j in range(3):
+                x0 = j * cell_width
+                y0 = i * cell_height
+                x1 = x0 + cell_width
+                y1 = y0 + cell_height
+                self.canvas.create_rectangle(x0, y0, x1, y1, fill="white", outline="black")
+                if matrix[i][j] != 0:
+                    self.canvas.create_text((x0 + x1) / 2, (y0 + y1) / 2, text=str(matrix[i][j]), font=('Arial', 13))
+
+
+
+
+
+
 def findIndex(board:'BoardState', target):
 
     for i, row in enumerate(board):
@@ -151,26 +227,27 @@ def isEmpty(stack):
 
 
 def DFS(init_board):
+    global start_time
+    start_time= time.time()
     init_state = BoardState(init_board, None, None)
     frontier = deque()
     explored = set()
     frontier.append(init_state)
-    count = 0
+
     while not isEmpty(frontier):
-        # print(count)
         count += 1
-        # print()
         state = frontier.pop()
         explored.add(state)
-        # print()
         # state.printState()
         
         if finished(state):
             path.append(state)
             while state.prev_state != None:
                 state = state.prev_state
-                path.append(state)            
-            return True
+                path.append(state)    
+            global end_time
+            end_time= time.time()          
+            return path[0]
         
         actions = state.getAllAction()
        
@@ -182,30 +259,32 @@ def DFS(init_board):
                 # print(action)
                 # print()
 
-    return False
+    return None
 
 
 
 def BFS(init_board):
+    global start_time
+    start_time= time.time()
     init_state = BoardState(init_board, None, None)
     frontier = queue.Queue()
     explored = set()
     frontier.put(init_state)
     count = 0
     while not frontier.empty():
-        print(count)
         count += 1
         print()
         state = frontier.get()
         explored.add(state)
-        print()
-        state.printState()
+        # state.printState()
         if finished(state):
             path.append(state)
             while state.prev_state != None:
                 state = state.prev_state
                 path.append(state)
-            return True
+            global end_time
+            end_time= time.time()       
+            return path[0]
         
         actions = state.getAllAction()
        
@@ -213,14 +292,16 @@ def BFS(init_board):
             new_state = state.takeAction(action)
             if ( not inQueue(new_state, frontier)) and ( not new_state.isIn(explored)):
                 frontier.put(new_state)
-                print()
-                print(action)
-                print()
+                # print()
+                # print(action)
+                # print()
                 
-    return False
+    return None
 
 
-def AStar(init_board):
+def AStar(init_board, flag):
+    global start_time
+    start_time= time.time()
     init_state = BoardState(init_board, None, None)
     frontier = []
     heapq.heapify(frontier)
@@ -228,64 +309,61 @@ def AStar(init_board):
     heapq.heappush(frontier, init_state)
     count = 0
     while len(frontier) != 0:
-        print(count)
         count += 1
-        print()
         state = heapq.heappop(frontier)
         explored.add(state)
-        print()
-        state.printState()
+        # state.printState()
         if finished(state):
             path.append(state)
             while state.prev_state != None:
                 state = state.prev_state
                 path.append(state)
-            return True
+            global end_time
+            end_time= time.time()     
+            return path[0]
         
         actions = state.getAllAction()
        
         for action in actions:
             new_state = state.takeAction(action)
-            # new_state.manhattan()
-            new_state.euclidean()
+            if flag == 1:
+                new_state.manhattan()
+            elif flag == 0:    
+                new_state.euclidean()
             if (( not new_state.isIn(explored)) and (not new_state.isIn(frontier))):
                 heapq.heappush(frontier, new_state)
-                print()
-                print(action)
-                print()
+                # print()
+                # print(action)
+                # print()
                 
-    return False
+    return None
+
+
+
+def printStatistics():
+    total_time = end_time - start_time
+    print("path:\n")
+    path.reverse()
+    for state in path:
+        print()
+        state.printState()
+        print()
+    print(f"cost equals: {cost}")   
+    print(f"time equals: {total_time}")  
 
 
 
 def main():
-    
-    # init_board = [
-    #     [1, 0, 2],
-    #     [3, 4, 5],
-    #     [6, 7, 8]
-    # ]
     
     init_board = [
         [1, 2, 5],
         [3, 4, 0],
         [6, 7, 8]
     ]
-    
-    init_state = BoardState(init_board, None, None)
-    init_state.printState()
-    print()
-    # print("manhattan ",init_state.manhattan_cost)
-    # print("euclidean",init_state.euclidean_cost)
-    print(AStar(init_board))
-
-    print("----------------------------------")
-    path.reverse()
-    for state in path:
-        print()
-        state.printState()
-        print
+  
+    root = tk.Tk()
+    gui = MyGUI(root, init_board)
+    root.mainloop()
     
 if __name__ == "__main__":
     main()
-        
