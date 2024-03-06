@@ -6,9 +6,7 @@ import tkinter as tk
 from tkinter import ttk
 import time
 
-
 path = []
-cost = 0
 
 class BoardState:
     def __init__(self, current_board:list, prev_state:'BoardState', prev_action):
@@ -143,7 +141,7 @@ class MyGUI():
         self.search_combobox.current(0)
         self.search_combobox.pack(pady=5)
 
-        self.button = tk.Button(self.root, text="Search", bg="#009292", anchor="center", width=20, font=('Arial', 13))
+        self.button = tk.Button(self.root, text="Search", bg="#009292", anchor="center", width=20, font=('Arial', 13),foreground="#FFFFFF")
         self.button.pack(pady=20, padx=20)
         self.display_matrix(self.board_state)
         self.button.bind("<Button-1>", lambda event: self.runSearch())
@@ -167,7 +165,6 @@ class MyGUI():
             goal = AStar(self.board_state, 1) 
             self.display_matrix(goal.current_board) 
             printStatistics()
-
 
 
 
@@ -229,6 +226,8 @@ def isEmpty(stack):
 def DFS(init_board):
     global start_time
     start_time= time.time()
+    global count
+    count = 0
     init_state = BoardState(init_board, None, None)
     frontier = deque()
     explored = set()
@@ -266,11 +265,12 @@ def DFS(init_board):
 def BFS(init_board):
     global start_time
     start_time= time.time()
+    global count
+    count = 0
     init_state = BoardState(init_board, None, None)
     frontier = queue.Queue()
     explored = set()
     frontier.put(init_state)
-    count = 0
     while not frontier.empty():
         count += 1
         print()
@@ -302,12 +302,13 @@ def BFS(init_board):
 def AStar(init_board, flag):
     global start_time
     start_time= time.time()
+    global count
+    count = 0
     init_state = BoardState(init_board, None, None)
     frontier = []
     heapq.heapify(frontier)
     explored = set()
     heapq.heappush(frontier, init_state)
-    count = 0
     while len(frontier) != 0:
         count += 1
         state = heapq.heappop(frontier)
@@ -348,9 +349,20 @@ def printStatistics():
         print()
         state.printState()
         print()
-    print(f"cost equals: {cost}")   
+    print(f"cost equals: {count}")   
     print(f"time equals: {total_time}")  
 
+
+def count_inversions(matrix):
+    inversions = 0
+    flat_matrix = [item for sublist in matrix for item in sublist]
+
+    for i in range(9):
+        for j in range(i + 1, 9):
+            if flat_matrix[i] != 0 and flat_matrix[j] != 0 and flat_matrix[i] > flat_matrix[j]:
+                inversions += 1
+
+    return inversions
 
 
 def main():
@@ -360,10 +372,13 @@ def main():
         [3, 4, 0],
         [6, 7, 8]
     ]
-  
-    root = tk.Tk()
-    gui = MyGUI(root, init_board)
-    root.mainloop()
+
+    if count_inversions(init_board) % 2 == 0:
+        root = tk.Tk()
+        MyGUI(root, init_board)
+        root.mainloop()
+    else:
+        print("No Solution")    
     
 if __name__ == "__main__":
     main()
